@@ -1,17 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import useForm from '../../hooks/form.js';
+import { SettingsContext } from '../../context/settings.js';
+
 
 import { v4 as uuid } from 'uuid';
 
 const ToDo = () => {
 
+  const settings = useContext(SettingsContext);
+
   const defaultValues = {
     difficulty: 4,
   }
-  
+  const [pages, setPages] = useState([]);
+  const [currentPage, updateCurrentPage] = useState(1);
   const [list, setList] = useState([]);
   const [incomplete, setIncomplete] = useState([]);
   const { handleChange, handleSubmit } = useForm(addItem, defaultValues);
+ 
+
+  function handleClick(e){
+    let pageNum = parseInt(e.target.textContent);
+    updateCurrentPage(pageNum);
+  }
+
+  useEffect(() => {
+    let numPages = Math.ceil(list.length/settings.numItems);
+    let pageArr = []
+    for(let i = 1; i <= numPages; i++){
+      pageArr.push(i);
+    }
+    setPages(pageArr);
+  }, [list.length], [currentPage]);
 
   function addItem(item) {
     console.log(item);
@@ -73,16 +93,19 @@ const ToDo = () => {
           <button type="submit">Add Item</button>
         </label>
       </form>
-
-      {list.map(item => (
-        <div key={item.id}>
-          <p>{item.text}</p>
-          <p><small>Assigned to: {item.assignee}</small></p>
-          <p><small>Difficulty: {item.difficulty}</small></p>
-          <div onClick={() => toggleComplete(item.id)}>Complete: {item.complete.toString()}</div>
-          <hr />
-        </div>
-      ))}
+      <SettingsContext.Consumer>
+        {settings => (
+             list.map(item => (
+              <div key={item.id}>
+                <p>{item.text}</p>
+                <p><small>Assigned to: {item.assignee}</small></p>
+                <p><small>Difficulty: {item.difficulty}</small></p>
+                <div onClick={() => toggleComplete(item.id)}>Complete: {item.complete.toString()}</div>
+                <hr />
+              </div>
+            ))
+        )}
+      </SettingsContext.Consumer>
 
     </>
   );
